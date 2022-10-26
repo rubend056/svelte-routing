@@ -4,7 +4,8 @@
  * https://github.com/reach/router/blob/master/LICENSE
  * */
 
-const paramRe = /^:(.+)/;
+// Made this regex more strict
+const paramRe = /^:\??(\w+)/;
 
 const SEGMENT_POINTS = 4;
 const STATIC_POINTS = 3;
@@ -181,8 +182,11 @@ function pick(routes, uri) {
           .join("/");
         break;
       }
-
-      if (uriSegment === undefined) {
+			
+			let dynamicMatch = paramRe.exec(routeSegment);
+			let optionalDynamic = routeSegment?.startsWith(":?");
+			
+      if (uriSegment === undefined && !optionalDynamic) {
         // URI is shorter than the route, no match
         // uri:   /users
         // route: /users/:userId
@@ -190,10 +194,8 @@ function pick(routes, uri) {
         break;
       }
 
-      let dynamicMatch = paramRe.exec(routeSegment);
-
       if (dynamicMatch && !isRootUri) {
-        const value = decodeURIComponent(uriSegment);
+        const value = decodeURIComponent(uriSegment??"");
         params[dynamicMatch[1]] = value;
       } else if (routeSegment !== uriSegment) {
         // Current segments don't match, not dynamic, not splat, so no match
